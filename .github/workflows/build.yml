@@ -22,6 +22,9 @@ jobs:
         with:
           channel: 'stable'
           
+      - name: Crea struttura Android
+        run: flutter create --platforms android .
+          
       - name: Scarica librerie
         run: flutter pub get
         
