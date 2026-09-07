@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 
 void main() {
@@ -7,7 +8,7 @@ void main() {
 class MezzoConfig {
   String nome;
   String targa;
-  String tipo; // 'ATB' (Betoniera) o 'BTP' (Betonpompa)
+  String tipo;
   double minorCaricoStandard;
 
   MezzoConfig({
@@ -510,26 +511,4 @@ class _DdtScreenState extends State<DdtScreen> {
 
   late MezzoConfig _mezzoSelezionato;
   int _radialeSelezionato = 1;
-  double _minorCaricoCalcolato = 0.0;
-
-  @override
-  void initState() {
-    super.initState();
-    _mezzoSelezionato = appConfig.mezziAzienda.first;
-  }
-
-  void _aggiornaMinorCarico(String val) {
-    double mcInseriti = double.tryParse(val) ?? 0.0;
-    setState(() {
-      if (mcInseriti < _mezzoSelezionato.minorCaricoStandard) {
-        _minorCaricoCalcolato =
-            _mezzoSelezionato.minorCaricoStandard - mcInseriti;
-      } else {
-        _minorCaricoCalcolato = 0.0;
-      }
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    bool isBeton
+  double _minorCaricoCalcolato =
