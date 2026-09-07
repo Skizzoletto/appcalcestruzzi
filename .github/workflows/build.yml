@@ -1,0 +1,35 @@
+name: Crea APK Android
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Imposta Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+          
+      - name: Imposta Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          
+      - name: Scarica librerie
+        run: flutter pub get
+        
+      - name: Costruisci APK
+        run: flutter build apk --release
+        
+      - name: Carica file APK finale
+        uses: actions/upload-artifact@v3
+        with:
+          name: app-calcestruzzi-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
