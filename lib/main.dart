@@ -1,4 +1,9 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:excel/excel.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 void main() {
   runApp(const CalcestruzziApp());
@@ -9,8 +14,11 @@ class MezzoConfig {
   String targa;
   String tipo; // 'ATB' (Betoniera) o 'BTP' (Betonpompa)
   double minorCaricoStandard;
+  String anno;
+  String stato;
+  String note;
 
-  MezzoConfig({required this.nome, required this.targa, required this.tipo, required this.minorCaricoStandard});
+  MezzoConfig({required this.nome, required this.targa, required this.tipo, required this.minorCaricoStandard, this.anno = '—', this.stato = 'ATTIVO', this.note = ''});
 }
 
 class AppConfig with ChangeNotifier {
@@ -26,8 +34,8 @@ class AppConfig with ChangeNotifier {
   double carta2Spesa = 600.0;
 
   List<MezzoConfig> mezziAzienda = [
-    MezzoConfig(nome: 'Iveco Trakker', targa: 'CT728EC', tipo: 'ATB', minorCaricoStandard: 8.0),
-    MezzoConfig(nome: 'Betonpompa Principale', targa: 'AB123CD', tipo: 'BTP', minorCaricoStandard: 7.0),
+    MezzoConfig(nome: 'Iveco Trakker', targa: 'CT728EC', tipo: 'ATB', minorCaricoStandard: 8.0, anno: '2019'),
+    MezzoConfig(nome: 'DK727DZ', targa: 'DK727DZ', tipo: 'ATB', minorCaricoStandard: 8.0, anno: '2018'),
   ];
 
   Map<int, double> tariffeRadiali = {
@@ -59,18 +67,18 @@ class AppConfig with ChangeNotifier {
 
 
 class DipendenteModel {
-  final String nome;
-  final String ruolo;
-  final String categoria;
-  final String patente;
-  final String dataPatente;
-  final String telefono;
-  final String email;
-  final String stato;
-  final List<String> mezziAssegnati;
-  final bool assegnazioneDaVerificare;
+  String nome;
+  String ruolo;
+  String categoria;
+  String patente;
+  String dataPatente;
+  String telefono;
+  String email;
+  String stato;
+  List<String> mezziAssegnati;
+  bool assegnazioneDaVerificare;
 
-  const DipendenteModel({
+  DipendenteModel({
     required this.nome,
     required this.ruolo,
     required this.categoria,
@@ -88,7 +96,7 @@ class DipendenteModel {
 // Le assegnazioni ISM discordanti rispetto all'anagrafica principale
 // vengono marcate per verifica e non vengono considerate definitive.
 final List<DipendenteModel> listaDipendenti = [
-  const DipendenteModel(
+  DipendenteModel(
     nome: 'Leoni Angelo',
     ruolo: 'Amministratore',
     categoria: 'Direzione',
@@ -98,7 +106,7 @@ final List<DipendenteModel> listaDipendenti = [
     email: 'skizzo_83@msn.com',
     stato: 'ATTIVO',
   ),
-  const DipendenteModel(
+  DipendenteModel(
     nome: 'Leoni Francesco',
     ruolo: 'Socio / RSPP',
     categoria: 'Direzione',
@@ -108,7 +116,7 @@ final List<DipendenteModel> listaDipendenti = [
     email: 'Dittaleonifrancesco@gmail.com',
     stato: 'ATTIVO',
   ),
-  const DipendenteModel(
+  DipendenteModel(
     nome: 'Vacca Valentino',
     ruolo: 'Conducente ATB',
     categoria: 'Autisti',
@@ -118,7 +126,7 @@ final List<DipendenteModel> listaDipendenti = [
     email: 'valevacca66@hotmail.it',
     stato: 'ATTIVO',
   ),
-  const DipendenteModel(
+  DipendenteModel(
     nome: 'Melas Francesco',
     ruolo: 'Conducente ATB',
     categoria: 'Autisti',
@@ -128,12 +136,12 @@ final List<DipendenteModel> listaDipendenti = [
     email: 'francescomelas240979@gmail.com',
     stato: 'ATTIVO',
   ),
-  const DipendenteModel(nome: 'Serra Andrea', ruolo: 'Collaboratore Esterno', categoria: 'Collaboratori', patente: '—', dataPatente: '—', telefono: '—', email: '—', stato: 'ATTIVO'),
-  const DipendenteModel(nome: 'Mariatina Crispu', ruolo: 'Consulente del Lavoro', categoria: 'Consulenti', patente: '—', dataPatente: '—', telefono: '—', email: '—', stato: 'ATTIVO'),
-  const DipendenteModel(nome: 'Casa Artigiani Cagliari', ruolo: 'Commercialista', categoria: 'Consulenti', patente: '—', dataPatente: '—', telefono: '—', email: '—', stato: 'ATTIVO'),
-  const DipendenteModel(nome: 'Dott. Sette', ruolo: 'Medico Competente', categoria: 'Consulenti', patente: '—', dataPatente: '—', telefono: '—', email: '—', stato: 'ATTIVO'),
-  const DipendenteModel(nome: 'Maria Rita Caddeo', ruolo: 'Assistenza Sanitaria', categoria: 'Consulenti', patente: '—', dataPatente: '—', telefono: '—', email: '—', stato: 'ATTIVO'),
-  const DipendenteModel(nome: '[Pos. disponibile]', ruolo: '[Ruolo aperto]', categoria: 'Posizioni aperte', patente: '—', dataPatente: '—', telefono: '—', email: '—', stato: 'VUOTO'),
+  DipendenteModel(nome: 'Serra Andrea', ruolo: 'Collaboratore Esterno', categoria: 'Collaboratori', patente: '—', dataPatente: '—', telefono: '—', email: '—', stato: 'ATTIVO'),
+  DipendenteModel(nome: 'Mariatina Crispu', ruolo: 'Consulente del Lavoro', categoria: 'Consulenti', patente: '—', dataPatente: '—', telefono: '—', email: '—', stato: 'ATTIVO'),
+  DipendenteModel(nome: 'Casa Artigiani Cagliari', ruolo: 'Commercialista', categoria: 'Consulenti', patente: '—', dataPatente: '—', telefono: '—', email: '—', stato: 'ATTIVO'),
+  DipendenteModel(nome: 'Dott. Sette', ruolo: 'Medico Competente', categoria: 'Consulenti', patente: '—', dataPatente: '—', telefono: '—', email: '—', stato: 'ATTIVO'),
+  DipendenteModel(nome: 'Maria Rita Caddeo', ruolo: 'Assistenza Sanitaria', categoria: 'Consulenti', patente: '—', dataPatente: '—', telefono: '—', email: '—', stato: 'ATTIVO'),
+  DipendenteModel(nome: '[Pos. disponibile]', ruolo: '[Ruolo aperto]', categoria: 'Posizioni aperte', patente: '—', dataPatente: '—', telefono: '—', email: '—', stato: 'VUOTO'),
 ];
 
 final Map<String, List<String>> assegnazioniIsmDaVerificare = {
@@ -396,13 +404,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
         const SizedBox(height: 8),
         LinearProgressIndicator(value: percentuale > 1 ? 1 : percentuale, minHeight: 10, color: inAllerta ? Colors.redAccent : baseColor),
-      ],
-    );
-  }
-}
-
-
-class AziendaScreen extends StatefulWidget {
+      class AziendaScreen extends StatefulWidget {
   const AziendaScreen({Key? key}) : super(key: key);
 
   @override
@@ -426,10 +428,14 @@ class _AziendaScreenState extends State<AziendaScreen> {
   Widget build(BuildContext context) {
     final attivi = listaDipendenti.where((d) => d.stato == 'ATTIVO').length;
     final autisti = listaDipendenti.where((d) => d.categoria == 'Autisti').length;
+    final mezziAttivi = appConfig.mezziAzienda.where((m) => m.stato == 'ATTIVO').length;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('AZIENDA & PERSONALE'),
+        actions: [
+          IconButton(icon: const Icon(Icons.download), tooltip: 'Esporta Excel/CSV', onPressed: _esportaDati),
+        ],
       ),
       body: Column(
         children: [
@@ -437,182 +443,173 @@ class _AziendaScreenState extends State<AziendaScreen> {
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: Column(
               children: [
-                Row(
-                  children: [
-                    Expanded(child: _miniStat('PERSONALE', '$attivi', Icons.groups)),
-                    const SizedBox(width: 10),
-                    Expanded(child: _miniStat('AUTISTI', '$autisti', Icons.local_shipping)),
-                  ],
-                ),
+                Row(children: [
+                  Expanded(child: _miniStat('PERSONALE', '$attivi', Icons.groups)),
+                  const SizedBox(width: 8),
+                  Expanded(child: _miniStat('AUTISTI', '$autisti', Icons.local_shipping)),
+                  const SizedBox(width: 8),
+                  Expanded(child: _miniStat('MEZZI', '$mezziAttivi', Icons.fire_truck)),
+                ]),
                 const SizedBox(height: 12),
-                TextField(
-                  decoration: const InputDecoration(
-                    prefixIcon: Icon(Icons.search),
-                    hintText: 'Cerca persona o ruolo...',
-                    border: OutlineInputBorder(),
-                  ),
-                  onChanged: (v) => setState(() => _cerca = v),
-                ),
+                Row(children: [
+                  Expanded(child: TextField(
+                    decoration: const InputDecoration(prefixIcon: Icon(Icons.search), hintText: 'Cerca persona o ruolo...', border: OutlineInputBorder()),
+                    onChanged: (v) => setState(() => _cerca = v),
+                  )),
+                  const SizedBox(width: 8),
+                  IconButton.filled(onPressed: _mostraDipendenteDialog, icon: const Icon(Icons.person_add), tooltip: 'Nuovo dipendente'),
+                ]),
                 const SizedBox(height: 10),
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: ['Tutti', 'Direzione', 'Autisti', 'Collaboratori', 'Consulenti', 'Posizioni aperte'].map((f) {
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: ChoiceChip(
-                          label: Text(f),
-                          selected: _filtro == f,
-                          onSelected: (_) => setState(() => _filtro = f),
-                        ),
-                      );
-                    }).toList(),
-                  ),
+                  child: Row(children: ['Tutti', 'Direzione', 'Autisti', 'Collaboratori', 'Consulenti', 'Posizioni aperte'].map((f) => Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: ChoiceChip(label: Text(f), selected: _filtro == f, onSelected: (_) => setState(() => _filtro = f)),
+                  )).toList()),
                 ),
               ],
             ),
           ),
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 90),
-              itemCount: _visibili.length,
-              itemBuilder: (context, index) {
-                final d = _visibili[index];
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 10),
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(12),
-                    onTap: () => _apriScheda(d),
-                    child: Padding(
-                      padding: const EdgeInsets.all(14),
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 25,
-                            child: Icon(d.categoria == 'Autisti' ? Icons.local_shipping : Icons.person),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(d.nome, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                                const SizedBox(height: 3),
-                                Text(d.ruolo),
-                                const SizedBox(height: 5),
-                                Text('Stato: ${d.stato}', style: TextStyle(color: d.stato == 'ATTIVO' ? Colors.greenAccent : Colors.orangeAccent, fontSize: 12)),
-                              ],
-                            ),
-                          ),
-                          const Icon(Icons.chevron_right),
-                        ],
-                      ),
-                    ),
+          Expanded(child: ListView.builder(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 90),
+            itemCount: _visibili.length,
+            itemBuilder: (context, index) {
+              final d = _visibili[index];
+              return Card(
+                margin: const EdgeInsets.only(bottom: 10),
+                child: ListTile(
+                  onTap: () => _apriScheda(d),
+                  leading: CircleAvatar(child: Icon(d.categoria == 'Autisti' ? Icons.local_shipping : Icons.person)),
+                  title: Text(d.nome, style: const TextStyle(fontWeight: FontWeight.bold)),
+                  subtitle: Text('${d.ruolo}\nStato: ${d.stato}${d.mezziAssegnati.isNotEmpty ? '\n🚛 ${d.mezziAssegnati.join(', ')}' : ''}'),
+                  isThreeLine: true,
+                  trailing: PopupMenuButton<String>(
+                    onSelected: (v) {
+                      if (v == 'edit') _mostraDipendenteDialog(d: d);
+                      if (v == 'archive') _archiviaDipendente(d);
+                      if (v == 'delete') _eliminaDipendente(d);
+                    },
+                    itemBuilder: (_) => const [
+                      PopupMenuItem(value: 'edit', child: Text('✏️ Modifica')),
+                      PopupMenuItem(value: 'archive', child: Text('🗄️ Archivia')),
+                      PopupMenuItem(value: 'delete', child: Text('🗑️ Elimina definitivamente')),
+                    ],
                   ),
-                );
-              },
-            ),
-          ),
+                ),
+              );
+            },
+          )),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _mostraOrganigramma(),
-        icon: const Icon(Icons.account_tree),
-        label: const Text('ORGANIGRAMMA'),
-      ),
+      floatingActionButton: FloatingActionButton.extended(onPressed: _mostraOrganigramma, icon: const Icon(Icons.account_tree), label: const Text('ORGANIGRAMMA')),
     );
   }
 
-  Widget _miniStat(String label, String value, IconData icon) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(12)),
-      child: Row(
-        children: [
-          Icon(icon, color: Theme.of(context).primaryColor),
-          const SizedBox(width: 10),
-          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)), Text(label, style: const TextStyle(fontSize: 10, color: Colors.grey))]),
-        ],
-      ),
-    );
+  Widget _miniStat(String label, String value, IconData icon) => Container(
+    padding: const EdgeInsets.all(10),
+    decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(12)),
+    child: Row(children: [Icon(icon, color: Theme.of(context).primaryColor, size: 20), const SizedBox(width: 7), Flexible(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(value, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.bold)), Text(label, style: const TextStyle(fontSize: 9, color: Colors.grey))]))]),
+  );
+
+  Future<void> _mostraDipendenteDialog({DipendenteModel? d}) async {
+    final nome = TextEditingController(text: d?.nome ?? '');
+    final ruolo = TextEditingController(text: d?.ruolo ?? '');
+    final patente = TextEditingController(text: d?.patente ?? '');
+    final dataPatente = TextEditingController(text: d?.dataPatente ?? '');
+    final telefono = TextEditingController(text: d?.telefono ?? '');
+    final email = TextEditingController(text: d?.email ?? '');
+    String categoria = d?.categoria ?? 'Autisti';
+    String stato = d?.stato ?? 'ATTIVO';
+
+    await showDialog(context: context, builder: (ctx) => StatefulBuilder(builder: (ctx, setLocal) => AlertDialog(
+      title: Text(d == null ? 'NUOVO DIPENDENTE' : 'MODIFICA ANAGRAFICA'),
+      content: SingleChildScrollView(child: Column(children: [
+        _field(nome, 'Nome e cognome'), _field(ruolo, 'Ruolo / mansione'),
+        DropdownButtonFormField<String>(value: categoria, decoration: const InputDecoration(labelText: 'Categoria'), items: ['Direzione','Autisti','Collaboratori','Consulenti','Posizioni aperte'].map((x) => DropdownMenuItem(value: x, child: Text(x))).toList(), onChanged: (v) => setLocal(() => categoria = v!)),
+        DropdownButtonFormField<String>(value: stato, decoration: const InputDecoration(labelText: 'Stato'), items: ['ATTIVO','SOSPESO','CESSATO','VUOTO'].map((x) => DropdownMenuItem(value: x, child: Text(x))).toList(), onChanged: (v) => setLocal(() => stato = v!)),
+        _field(patente, 'Patente / abilitazioni'), _field(dataPatente, 'Data patente / abilitazione'), _field(telefono, 'Telefono', keyboard: TextInputType.phone), _field(email, 'Email'),
+      ])),
+      actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('ANNULLA')), ElevatedButton(onPressed: () {
+        if (nome.text.trim().isEmpty) return;
+        if (d == null) {
+          listaDipendenti.add(DipendenteModel(nome: nome.text.trim(), ruolo: ruolo.text.trim(), categoria: categoria, patente: patente.text.trim(), dataPatente: dataPatente.text.trim(), telefono: telefono.text.trim(), email: email.text.trim(), stato: stato));
+        } else {
+          d.nome = nome.text.trim(); d.ruolo = ruolo.text.trim(); d.categoria = categoria; d.patente = patente.text.trim(); d.dataPatente = dataPatente.text.trim(); d.telefono = telefono.text.trim(); d.email = email.text.trim(); d.stato = stato;
+        }
+        setState(() {}); Navigator.pop(ctx); _snack(d == null ? 'Dipendente aggiunto' : 'Anagrafica aggiornata');
+      }, child: const Text('SALVA'))],
+    )));
   }
+
+  Widget _field(TextEditingController c, String label, {TextInputType? keyboard}) => Padding(padding: const EdgeInsets.only(bottom: 10), child: TextField(controller: c, keyboardType: keyboard, decoration: InputDecoration(labelText: label, border: const OutlineInputBorder())));
 
   void _apriScheda(DipendenteModel d) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(d.nome, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 4),
-              Text(d.ruolo, style: const TextStyle(color: Colors.cyanAccent)),
-              const Divider(height: 28),
-              Text('Categoria: ${d.categoria}'),
-              const SizedBox(height: 8),
-              Text('Patente: ${d.patente}'),
-              Text('Data patente: ${d.dataPatente}'),
-              if (d.telefono != '—') Text('Telefono: ${d.telefono}'),
-              if (d.email != '—') Text('Email: ${d.email}'),
-              const SizedBox(height: 14),
-              if (d.categoria == 'Autisti') ...[
-                const Text('MEZZI ASSEGNATI', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.greenAccent)),
-                const SizedBox(height: 6),
-                const Text('Le assegnazioni definitive saranno gestite nel modulo Mezzi ↔ Autisti.'),
-                const SizedBox(height: 8),
-                const Text('⚠️ Il DVR contiene anche assegnazioni ISM con nominativi diversi dall’anagrafica principale: da verificare.'),
-              ],
-              const SizedBox(height: 12),
-            ],
-          ),
-        ),
-      ),
-    );
+    showModalBottomSheet(context: context, isScrollControlled: true, builder: (_) => SafeArea(child: Padding(padding: const EdgeInsets.all(20), child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Row(children: [Expanded(child: Text(d.nome, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold))), IconButton(icon: const Icon(Icons.edit), onPressed: () { Navigator.pop(context); _mostraDipendenteDialog(d: d); })]),
+      Text(d.ruolo, style: const TextStyle(color: Colors.cyanAccent)), const Divider(height: 28),
+      Text('Categoria: ${d.categoria}'), Text('Stato: ${d.stato}'), Text('Patente: ${d.patente}'), Text('Data patente: ${d.dataPatente}'), if (d.telefono != '—' && d.telefono.isNotEmpty) Text('Telefono: ${d.telefono}'), if (d.email != '—' && d.email.isNotEmpty) Text('Email: ${d.email}'),
+      const SizedBox(height: 12), const Text('MEZZI ASSEGNATI', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.greenAccent)),
+      if (d.mezziAssegnati.isEmpty) const Text('Nessun mezzo assegnato'), ...d.mezziAssegnati.map((m) => ListTile(contentPadding: EdgeInsets.zero, leading: const Icon(Icons.local_shipping), title: Text(m))),
+      if (d.assegnazioneDaVerificare) const Text('⚠️ Assegnazione ISM da verificare', style: TextStyle(color: Colors.orangeAccent)),
+      const SizedBox(height: 8), Row(children: [Expanded(child: OutlinedButton.icon(onPressed: () { Navigator.pop(context); _mostraDipendenteDialog(d: d); }, icon: const Icon(Icons.edit), label: const Text('MODIFICA'))), const SizedBox(width: 8), Expanded(child: OutlinedButton.icon(onPressed: () { Navigator.pop(context); _archiviaDipendente(d); }, icon: const Icon(Icons.archive), label: const Text('ARCHIVIA')))]),
+      const SizedBox(height: 8),
+      SizedBox(width: double.infinity, child: OutlinedButton.icon(onPressed: () { Navigator.pop(context); _assegnaMezzi(d); }, icon: const Icon(Icons.local_shipping), label: const Text('ASSEGNA / MODIFICA MEZZI'))),
+    ]))));
   }
 
-  void _mostraOrganigramma() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Text('ORGANIGRAMMA AZIENDALE', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 6),
-              const Text('Struttura iniziale ricavata dall’anagrafica del DVR 2026.'),
-              const SizedBox(height: 18),
-              _orgCard('👔 DIREZIONE', listaDipendenti.where((d) => d.categoria == 'Direzione').toList()),
-              _orgCard('🚛 AUTISTI', listaDipendenti.where((d) => d.categoria == 'Autisti').toList()),
-              _orgCard('🤝 COLLABORATORI', listaDipendenti.where((d) => d.categoria == 'Collaboratori').toList()),
-              _orgCard('📋 CONSULENTI', listaDipendenti.where((d) => d.categoria == 'Consulenti').toList()),
-              const SizedBox(height: 12),
-              const Text('⚠️ ASSEGNAZIONI ISM DA VERIFICARE', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orangeAccent)),
-              ...assegnazioniIsmDaVerificare.entries.map((e) => ListTile(title: Text(e.key), subtitle: Text(e.value.join(' • ')))),
-            ],
-          ),
-        ),
-      ),
-    );
+  Future<void> _assegnaMezzi(DipendenteModel d) async {
+    final selezionati = Set<String>.from(d.mezziAssegnati);
+    await showDialog(context: context, builder: (ctx) => StatefulBuilder(builder: (ctx, setLocal) => AlertDialog(
+      title: Text('MEZZI DI ${d.nome.toUpperCase()}'),
+      content: appConfig.mezziAzienda.isEmpty ? const Text('Nessun mezzo presente in flotta.') : SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: appConfig.mezziAzienda.map((m) => CheckboxListTile(
+        value: selezionati.contains(m.targa),
+        title: Text(m.nome), subtitle: Text('${m.targa} • ${m.tipo}'),
+        onChanged: (v) => setLocal(() { if (v == true) { selezionati.add(m.targa); } else { selezionati.remove(m.targa); } }),
+      )).toList())),
+      actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('ANNULLA')), ElevatedButton(onPressed: () { d.mezziAssegnati = selezionati.toList(); setState(() {}); Navigator.pop(ctx); _snack('Assegnazioni aggiornate'); }, child: const Text('SALVA'))],
+    )));
   }
 
-  Widget _orgCard(String title, List<DipendenteModel> persone) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          ...persone.map((p) => ListTile(dense: true, contentPadding: EdgeInsets.zero, leading: const Icon(Icons.person_outline), title: Text(p.nome), subtitle: Text(p.ruolo))),
-        ]),
-      ),
+  void _archiviaDipendente(DipendenteModel d) { setState(() => d.stato = 'CESSATO'); _snack('${d.nome} archiviato'); }
+  Future<void> _eliminaDipendente(DipendenteModel d) async {
+    final ok = await showDialog<bool>(context: context, builder: (_) => AlertDialog(title: const Text('Eliminare definitivamente?'), content: Text('Questa operazione rimuove ${d.nome} dall\'anagrafica. Se ha dati storici collegati, è preferibile archiviarlo.'), actions: [TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('ANNULLA')), TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('ELIMINA'))]));
+    if (ok == true) setState(() => listaDipendenti.remove(d));
+  }
+
+  void _mostraOrganigramma() => showModalBottomSheet(context: context, isScrollControlled: true, builder: (_) => SafeArea(child: SingleChildScrollView(padding: const EdgeInsets.all(20), child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+    const Text('ORGANIGRAMMA AZIENDALE', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)), const SizedBox(height: 6), const Text('Struttura dinamica dell\'azienda. Tocca una persona per modificarla.'), const SizedBox(height: 18),
+    _orgCard('👔 DIREZIONE', listaDipendenti.where((d) => d.categoria == 'Direzione').toList()), _orgCard('🚛 AUTISTI', listaDipendenti.where((d) => d.categoria == 'Autisti').toList()), _orgCard('🤝 COLLABORATORI', listaDipendenti.where((d) => d.categoria == 'Collaboratori').toList()), _orgCard('📋 CONSULENTI', listaDipendenti.where((d) => d.categoria == 'Consulenti').toList()),
+    const SizedBox(height: 12), const Text('⚠️ ASSEGNAZIONI ISM DA VERIFICARE', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orangeAccent)), ...assegnazioniIsmDaVerificare.entries.map((e) => ListTile(title: Text(e.key), subtitle: Text(e.value.join(' • ')))),
+  ]))));
+
+  Widget _orgCard(String title, List<DipendenteModel> persone) => Card(margin: const EdgeInsets.only(bottom: 12), child: Padding(padding: const EdgeInsets.all(12), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: const TextStyle(fontWeight: FontWeight.bold)), ...persone.map((p) => ListTile(contentPadding: EdgeInsets.zero, leading: const Icon(Icons.person_outline), title: Text(p.nome), subtitle: Text(p.ruolo), onTap: () { Navigator.pop(context); _mostraDipendenteDialog(d: p); }))])));
+
+  Future<void> _esportaDati() async {
+    final workbook = Excel.createExcel();
+    final personale = workbook['Personale'];
+    personale.appendRow([TextCellValue('Nome'), TextCellValue('Ruolo'), TextCellValue('Categoria'), TextCellValue('Stato'), TextCellValue('Patente'), TextCellValue('Data patente'), TextCellValue('Telefono'), TextCellValue('Email'), TextCellValue('Mezzi assegnati')]);
+    for (final d in listaDipendenti) personale.appendRow([TextCellValue(d.nome), TextCellValue(d.ruolo), TextCellValue(d.categoria), TextCellValue(d.stato), TextCellValue(d.patente), TextCellValue(d.dataPatente), TextCellValue(d.telefono), TextCellValue(d.email), TextCellValue(d.mezziAssegnati.join(' | '))]);
+
+    final flotta = workbook['Parco Mezzi'];
+    flotta.appendRow([TextCellValue('Nome/Modello'), TextCellValue('Targa'), TextCellValue('Tipo'), TextCellValue('Capacita mc'), TextCellValue('Anno'), TextCellValue('Stato'), TextCellValue('Note'), TextCellValue('Autisti')]);
+    for (final m in appConfig.mezziAzienda) flotta.appendRow([TextCellValue(m.nome), TextCellValue(m.targa), TextCellValue(m.tipo), DoubleCellValue(m.minorCaricoStandard), TextCellValue(m.anno), TextCellValue(m.stato), TextCellValue(m.note), TextCellValue(listaDipendenti.where((d) => d.mezziAssegnati.contains(m.targa)).map((d) => d.nome).join(' | '))]);
+
+    final viaggi = workbook['Viaggi'];
+    viaggi.appendRow([TextCellValue('Data'), TextCellValue('DDT'), TextCellValue('Mezzo'), TextCellValue('Cantiere'), TextCellValue('Mc'), TextCellValue('Minor carico'), TextCellValue('Sosta min'), TextCellValue('Pompaggio mc'), TextCellValue('Piazzamenti'), TextCellValue('Importo')]);
+    for (final v in listaViaggiGlobali) viaggi.appendRow([TextCellValue(v.dataDdt), TextCellValue(v.numeroDdt), TextCellValue(v.mezzoInfo), TextCellValue(v.cantiere), DoubleCellValue(v.mcEffettivi), DoubleCellValue(v.minorCarico), DoubleCellValue(v.minutiSosta), DoubleCellValue(v.pompaggioMc), IntCellValue(v.piazzamenti), DoubleCellValue(v.importoTotale)]);
+
+    final dir = await getTemporaryDirectory();
+    final file = File('${dir.path}/Calcestruzzi_Ogliastra_Export.xlsx');
+    final bytes = workbook.save();
+    if (bytes == null) return;
+    await file.writeAsBytes(bytes, flush: true);
+    await Share.shareXFiles([XFile(file.path)], text: 'Esportazione Excel Calcestruzzi Ogliastra');
+  }
+  String _csv(String v) => '"${v.replaceAll('"', '""')}"';
+  void _snack(String t) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(t)));
+}
+
+ ),
     );
   }
 }
@@ -670,6 +667,8 @@ class DdtScreen extends StatefulWidget {
 
 class _DdtScreenState extends State<DdtScreen> {
   final TextEditingController _dataController = TextEditingController(text: '07/09/2026');
+  final TextEditingController _oraPartenzaController = TextEditingController(text: '07:30');
+  final TextEditingController _oraFineController = TextEditingController(text: '08:30');
   final TextEditingController _numDdtController = TextEditingController();
   final TextEditingController _cantiereController = TextEditingController();
   final TextEditingController _mcController = TextEditingController();
@@ -703,7 +702,7 @@ class _DdtScreenState extends State<DdtScreen> {
     bool isBetonpompa = _mezzoSelezionato.tipo == 'BTP';
 
     return Scaffold(
-      appBar: AppBar(title: const Text('NUOVO DDT & SERVIZIO')),
+      appBar: AppBar(title: const Text('NUOVO DDT & SERVIZIO'), actions: [IconButton(tooltip: 'Google Calendar', icon: const Icon(Icons.event), onPressed: _aggiungiGoogleCalendar)]),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -716,6 +715,12 @@ class _DdtScreenState extends State<DdtScreen> {
                 Expanded(child: TextField(controller: _numDdtController, decoration: const InputDecoration(labelText: 'N. DDT', border: OutlineInputBorder()))),
               ],
             ),
+            const SizedBox(height: 12),
+            Row(children: [
+              Expanded(child: TextField(controller: _oraPartenzaController, decoration: const InputDecoration(labelText: 'Ora partenza', border: OutlineInputBorder()))),
+              const SizedBox(width: 12),
+              Expanded(child: TextField(controller: _oraFineController, decoration: const InputDecoration(labelText: 'Ora fine / rientro', border: OutlineInputBorder()))),
+            ],),
             const SizedBox(height: 16),
             DropdownButtonFormField<MezzoConfig>(
               value: _mezzoSelezionato,
@@ -827,6 +832,32 @@ class _DdtScreenState extends State<DdtScreen> {
       ),
     );
   }
+
+  Future<void> _aggiungiGoogleCalendar() async {
+    DateTime parseDateTime(String date, String time) {
+      final p = date.split('/');
+      final t = time.split(':');
+      final day = int.tryParse(p.length > 0 ? p[0] : '') ?? DateTime.now().day;
+      final month = int.tryParse(p.length > 1 ? p[1] : '') ?? DateTime.now().month;
+      final year = int.tryParse(p.length > 2 ? p[2] : '') ?? DateTime.now().year;
+      final hour = int.tryParse(t.length > 0 ? t[0] : '') ?? 7;
+      final minute = int.tryParse(t.length > 1 ? t[1] : '') ?? 30;
+      return DateTime(year, month, day, hour, minute);
+    }
+    final start = parseDateTime(_dataController.text, _oraPartenzaController.text);
+    final end = parseDateTime(_dataController.text, _oraFineController.text);
+    String fmt(DateTime d) => d.toUtc().toIso8601String().replaceAll('-', '').replaceAll(':', '').split('.').first + 'Z';
+    final uri = Uri.https('calendar.google.com', '/calendar/render', {
+      'action': 'TEMPLATE',
+      'text': 'Viaggio – ${_cantiereController.text.isEmpty ? 'Cantiere' : _cantiereController.text}',
+      'dates': '${fmt(start)}/${fmt(end)}',
+      'details': 'DDT: ${_numDdtController.text}\nMezzo: ${_mezzoSelezionato.nome} - ${_mezzoSelezionato.targa}\nCalcestruzzo: ${_mcController.text} mc',
+    });
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication) && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Impossibile aprire Google Calendar')));
+    }
+  }
+
 }
 
 class OpzioniScreen extends StatefulWidget {
@@ -938,10 +969,19 @@ class _OpzioniScreenState extends State<OpzioniScreen> {
             ...appConfig.mezziAzienda.map((m) => Card(
               child: ListTile(
                 title: Text('${m.nome} (${m.targa})'),
-                subtitle: Text('Tipo: ${m.tipo} | Minor Carico Standard: ${m.minorCaricoStandard} mc'),
-                trailing: IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.red),
-                  onPressed: () => setState(() => appConfig.mezziAzienda.remove(m)),
+                subtitle: Text('Tipo: ${m.tipo} | Capacità: ${m.minorCaricoStandard} mc | Stato: ${m.stato}\nAutisti: ${listaDipendenti.where((d) => d.mezziAssegnati.contains(m.targa)).map((d) => d.nome).join(', ')}'),
+                onTap: () => _modificaMezzoDialog(m),
+                trailing: PopupMenuButton<String>(
+                  onSelected: (v) {
+                    if (v == 'edit') _modificaMezzoDialog(m);
+                    if (v == 'archive') setState(() => m.stato = 'FUORI SERVIZIO');
+                    if (v == 'delete') setState(() => appConfig.mezziAzienda.remove(m));
+                  },
+                  itemBuilder: (_) => const [
+                    PopupMenuItem(value: 'edit', child: Text('✏️ Modifica')),
+                    PopupMenuItem(value: 'archive', child: Text('🗄️ Metti fuori servizio')),
+                    PopupMenuItem(value: 'delete', child: Text('🗑️ Elimina')),
+                  ],
                 ),
               ),
             )),
@@ -985,7 +1025,37 @@ class _OpzioniScreenState extends State<OpzioniScreen> {
       ),
     );
   }
+  Future<void> _modificaMezzoDialog(MezzoConfig? m) async {
+    final nome = TextEditingController(text: m?.nome ?? '');
+    final targa = TextEditingController(text: m?.targa ?? '');
+    final cap = TextEditingController(text: m?.minorCaricoStandard.toString() ?? '8');
+    final anno = TextEditingController(text: m?.anno ?? '');
+    final note = TextEditingController(text: m?.note ?? '');
+    String tipo = m?.tipo ?? 'ATB';
+    String stato = m?.stato ?? 'ATTIVO';
+    await showDialog(context: context, builder: (ctx) => StatefulBuilder(builder: (ctx, setLocal) => AlertDialog(
+      title: Text(m == null ? 'NUOVO MEZZO' : 'MODIFICA MEZZO'),
+      content: SingleChildScrollView(child: Column(children: [
+        _mezzoField(nome, 'Marca / modello'), _mezzoField(targa, 'Targa'),
+        DropdownButtonFormField<String>(value: tipo, decoration: const InputDecoration(labelText: 'Tipo'), items: ['ATB','BTP','ALTRO'].map((x) => DropdownMenuItem(value: x, child: Text(x))).toList(), onChanged: (v) => setLocal(() => tipo = v!)),
+        _mezzoField(cap, 'Capacità standard mc', keyboard: TextInputType.number), _mezzoField(anno, 'Anno'),
+        DropdownButtonFormField<String>(value: stato, decoration: const InputDecoration(labelText: 'Stato'), items: ['ATTIVO','IN MANUTENZIONE','FUORI SERVIZIO','ARCHIVIATO'].map((x) => DropdownMenuItem(value: x, child: Text(x))).toList(), onChanged: (v) => setLocal(() => stato = v!)),
+        _mezzoField(note, 'Note'),
+      ])),
+      actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('ANNULLA')), ElevatedButton(onPressed: () {
+        final capacita = double.tryParse(cap.text.replaceAll(',', '.')) ?? 8;
+        if (nome.text.trim().isEmpty || targa.text.trim().isEmpty) return;
+        if (m == null) appConfig.mezziAzienda.add(MezzoConfig(nome: nome.text.trim(), targa: targa.text.trim().toUpperCase(), tipo: tipo, minorCaricoStandard: capacita, anno: anno.text.trim(), stato: stato, note: note.text.trim()));
+        else { m.nome = nome.text.trim(); m.targa = targa.text.trim().toUpperCase(); m.tipo = tipo; m.minorCaricoStandard = capacita; m.anno = anno.text.trim(); m.stato = stato; m.note = note.text.trim(); }
+        setState(() {}); Navigator.pop(ctx); ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m == null ? 'Mezzo aggiunto' : 'Mezzo aggiornato')));
+      }, child: const Text('SALVA'))],
+    )));
+  }
+
+  Widget _mezzoField(TextEditingController c, String label, {TextInputType? keyboard}) => Padding(padding: const EdgeInsets.only(bottom: 10), child: TextField(controller: c, keyboardType: keyboard, decoration: InputDecoration(labelText: label, border: const OutlineInputBorder())));
+
 }
+
 
 class RifornimentoScreen extends StatefulWidget {
   const RifornimentoScreen({Key? key}) : super(key: key);
