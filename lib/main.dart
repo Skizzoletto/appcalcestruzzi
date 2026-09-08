@@ -57,6 +57,90 @@ class AppConfig with ChangeNotifier {
   }
 }
 
+
+class DipendenteModel {
+  final String nome;
+  final String ruolo;
+  final String categoria;
+  final String patente;
+  final String dataPatente;
+  final String telefono;
+  final String email;
+  final String stato;
+  final List<String> mezziAssegnati;
+  final bool assegnazioneDaVerificare;
+
+  const DipendenteModel({
+    required this.nome,
+    required this.ruolo,
+    required this.categoria,
+    required this.patente,
+    required this.dataPatente,
+    required this.telefono,
+    required this.email,
+    required this.stato,
+    this.mezziAssegnati = const [],
+    this.assegnazioneDaVerificare = false,
+  });
+}
+
+// Anagrafica iniziale ricavata dal DVR 2026.
+// Le assegnazioni ISM discordanti rispetto all'anagrafica principale
+// vengono marcate per verifica e non vengono considerate definitive.
+final List<DipendenteModel> listaDipendenti = [
+  const DipendenteModel(
+    nome: 'Leoni Angelo',
+    ruolo: 'Amministratore',
+    categoria: 'Direzione',
+    patente: 'CA550347H',
+    dataPatente: '14/09/2015',
+    telefono: '3270457439',
+    email: 'skizzo_83@msn.com',
+    stato: 'ATTIVO',
+  ),
+  const DipendenteModel(
+    nome: 'Leoni Francesco',
+    ruolo: 'Socio / RSPP',
+    categoria: 'Direzione',
+    patente: 'U1F8665F9C',
+    dataPatente: '24/04/2013',
+    telefono: '3334923993',
+    email: 'Dittaleonifrancesco@gmail.com',
+    stato: 'ATTIVO',
+  ),
+  const DipendenteModel(
+    nome: 'Vacca Valentino',
+    ruolo: 'Conducente ATB',
+    categoria: 'Autisti',
+    patente: '—',
+    dataPatente: '18/10/2022',
+    telefono: '3393270234',
+    email: 'valevacca66@hotmail.it',
+    stato: 'ATTIVO',
+  ),
+  const DipendenteModel(
+    nome: 'Melas Francesco',
+    ruolo: 'Conducente ATB',
+    categoria: 'Autisti',
+    patente: '—',
+    dataPatente: '24/01/2024',
+    telefono: '3496522058',
+    email: 'francescomelas240979@gmail.com',
+    stato: 'ATTIVO',
+  ),
+  const DipendenteModel(nome: 'Serra Andrea', ruolo: 'Collaboratore Esterno', categoria: 'Collaboratori', patente: '—', dataPatente: '—', telefono: '—', email: '—', stato: 'ATTIVO'),
+  const DipendenteModel(nome: 'Mariatina Crispu', ruolo: 'Consulente del Lavoro', categoria: 'Consulenti', patente: '—', dataPatente: '—', telefono: '—', email: '—', stato: 'ATTIVO'),
+  const DipendenteModel(nome: 'Casa Artigiani Cagliari', ruolo: 'Commercialista', categoria: 'Consulenti', patente: '—', dataPatente: '—', telefono: '—', email: '—', stato: 'ATTIVO'),
+  const DipendenteModel(nome: 'Dott. Sette', ruolo: 'Medico Competente', categoria: 'Consulenti', patente: '—', dataPatente: '—', telefono: '—', email: '—', stato: 'ATTIVO'),
+  const DipendenteModel(nome: 'Maria Rita Caddeo', ruolo: 'Assistenza Sanitaria', categoria: 'Consulenti', patente: '—', dataPatente: '—', telefono: '—', email: '—', stato: 'ATTIVO'),
+  const DipendenteModel(nome: '[Pos. disponibile]', ruolo: '[Ruolo aperto]', categoria: 'Posizioni aperte', patente: '—', dataPatente: '—', telefono: '—', email: '—', stato: 'VUOTO'),
+];
+
+final Map<String, List<String>> assegnazioniIsmDaVerificare = {
+  'DK727DZ': ['Rossi Marco', 'Bianchi Antonio'],
+  'CT728EC': ['Rossi Marco', 'Verdi Paolo'],
+};
+
 final appConfig = AppConfig();
 
 class CalcestruzziApp extends StatefulWidget {
@@ -177,6 +261,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               const Divider(),
               ListTile(
+                leading: const Icon(Icons.groups, size: 30),
+                title: const Text('Azienda & Personale', style: TextStyle(fontSize: 18)),
+                subtitle: const Text('Organigramma, dipendenti e assegnazioni mezzi'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const AziendaScreen()));
+                },
+              ),
+              const Divider(),
+              ListTile(
                 leading: const Icon(Icons.local_gas_station, size: 30),
                 title: const Text('Nuovo Rifornimento', style: TextStyle(fontSize: 18)),
                 subtitle: const Text('Registra scontrino carburante'),
@@ -201,6 +295,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
       appBar: AppBar(
         title: Text(appConfig.nomeAzienda, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
         actions: [
+          IconButton(
+            tooltip: 'Azienda e personale',
+            icon: const Icon(Icons.groups),
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const AziendaScreen())),
+          ),
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const OpzioniScreen())).then((_) => setState(() {})),
@@ -298,6 +397,222 @@ class _DashboardScreenState extends State<DashboardScreen> {
         const SizedBox(height: 8),
         LinearProgressIndicator(value: percentuale > 1 ? 1 : percentuale, minHeight: 10, color: inAllerta ? Colors.redAccent : baseColor),
       ],
+    );
+  }
+}
+
+
+class AziendaScreen extends StatefulWidget {
+  const AziendaScreen({Key? key}) : super(key: key);
+
+  @override
+  State<AziendaScreen> createState() => _AziendaScreenState();
+}
+
+class _AziendaScreenState extends State<AziendaScreen> {
+  String _filtro = 'Tutti';
+  String _cerca = '';
+
+  List<DipendenteModel> get _visibili {
+    return listaDipendenti.where((d) {
+      final matchFiltro = _filtro == 'Tutti' || d.categoria == _filtro;
+      final q = _cerca.trim().toLowerCase();
+      final matchRicerca = q.isEmpty || d.nome.toLowerCase().contains(q) || d.ruolo.toLowerCase().contains(q);
+      return matchFiltro && matchRicerca;
+    }).toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final attivi = listaDipendenti.where((d) => d.stato == 'ATTIVO').length;
+    final autisti = listaDipendenti.where((d) => d.categoria == 'Autisti').length;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('AZIENDA & PERSONALE'),
+      ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(child: _miniStat('PERSONALE', '$attivi', Icons.groups)),
+                    const SizedBox(width: 10),
+                    Expanded(child: _miniStat('AUTISTI', '$autisti', Icons.local_shipping)),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  decoration: const InputDecoration(
+                    prefixIcon: Icon(Icons.search),
+                    hintText: 'Cerca persona o ruolo...',
+                    border: OutlineInputBorder(),
+                  ),
+                  onChanged: (v) => setState(() => _cerca = v),
+                ),
+                const SizedBox(height: 10),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: ['Tutti', 'Direzione', 'Autisti', 'Collaboratori', 'Consulenti', 'Posizioni aperte'].map((f) {
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: ChoiceChip(
+                          label: Text(f),
+                          selected: _filtro == f,
+                          onSelected: (_) => setState(() => _filtro = f),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 90),
+              itemCount: _visibili.length,
+              itemBuilder: (context, index) {
+                final d = _visibili[index];
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 10),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () => _apriScheda(d),
+                    child: Padding(
+                      padding: const EdgeInsets.all(14),
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 25,
+                            child: Icon(d.categoria == 'Autisti' ? Icons.local_shipping : Icons.person),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(d.nome, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                                const SizedBox(height: 3),
+                                Text(d.ruolo),
+                                const SizedBox(height: 5),
+                                Text('Stato: ${d.stato}', style: TextStyle(color: d.stato == 'ATTIVO' ? Colors.greenAccent : Colors.orangeAccent, fontSize: 12)),
+                              ],
+                            ),
+                          ),
+                          const Icon(Icons.chevron_right),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _mostraOrganigramma(),
+        icon: const Icon(Icons.account_tree),
+        label: const Text('ORGANIGRAMMA'),
+      ),
+    );
+  }
+
+  Widget _miniStat(String label, String value, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(12)),
+      child: Row(
+        children: [
+          Icon(icon, color: Theme.of(context).primaryColor),
+          const SizedBox(width: 10),
+          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)), Text(label, style: const TextStyle(fontSize: 10, color: Colors.grey))]),
+        ],
+      ),
+    );
+  }
+
+  void _apriScheda(DipendenteModel d) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(d.nome, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 4),
+              Text(d.ruolo, style: const TextStyle(color: Colors.cyanAccent)),
+              const Divider(height: 28),
+              Text('Categoria: ${d.categoria}'),
+              const SizedBox(height: 8),
+              Text('Patente: ${d.patente}'),
+              Text('Data patente: ${d.dataPatente}'),
+              if (d.telefono != '—') Text('Telefono: ${d.telefono}'),
+              if (d.email != '—') Text('Email: ${d.email}'),
+              const SizedBox(height: 14),
+              if (d.categoria == 'Autisti') ...[
+                const Text('MEZZI ASSEGNATI', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.greenAccent)),
+                const SizedBox(height: 6),
+                const Text('Le assegnazioni definitive saranno gestite nel modulo Mezzi ↔ Autisti.'),
+                const SizedBox(height: 8),
+                const Text('⚠️ Il DVR contiene anche assegnazioni ISM con nominativi diversi dall’anagrafica principale: da verificare.'),
+              ],
+              const SizedBox(height: 12),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _mostraOrganigramma() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text('ORGANIGRAMMA AZIENDALE', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 6),
+              const Text('Struttura iniziale ricavata dall’anagrafica del DVR 2026.'),
+              const SizedBox(height: 18),
+              _orgCard('👔 DIREZIONE', listaDipendenti.where((d) => d.categoria == 'Direzione').toList()),
+              _orgCard('🚛 AUTISTI', listaDipendenti.where((d) => d.categoria == 'Autisti').toList()),
+              _orgCard('🤝 COLLABORATORI', listaDipendenti.where((d) => d.categoria == 'Collaboratori').toList()),
+              _orgCard('📋 CONSULENTI', listaDipendenti.where((d) => d.categoria == 'Consulenti').toList()),
+              const SizedBox(height: 12),
+              const Text('⚠️ ASSEGNAZIONI ISM DA VERIFICARE', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orangeAccent)),
+              ...assegnazioniIsmDaVerificare.entries.map((e) => ListTile(title: Text(e.key), subtitle: Text(e.value.join(' • ')))),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _orgCard(String title, List<DipendenteModel> persone) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          ...persone.map((p) => ListTile(dense: true, contentPadding: EdgeInsets.zero, leading: const Icon(Icons.person_outline), title: Text(p.nome), subtitle: Text(p.ruolo))),
+        ]),
+      ),
     );
   }
 }
