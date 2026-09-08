@@ -613,7 +613,7 @@ class _OpzioniScreenState extends State<OpzioniScreen> {
             ),
             const SizedBox(height: 30),
             Row(
-              mainAxisAlignment: MainAxisAlignment.between,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text('PARCO MEZZI (ATB / BTP)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.greenAccent)),
                 IconButton(icon: const Icon(Icons.add_circle, color: Colors.greenAccent), onPressed: _aggiungiMezzoDialog),
