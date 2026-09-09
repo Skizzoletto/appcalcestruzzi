@@ -26,17 +26,27 @@ jobs:
       - name: Crea struttura Android
         run: flutter create --platforms android .
 
-      - name: Imposta compileSdk Android 36
+      - name: Imposta Android SDK 36
         run: |
-          if [ -f android/app/build.gradle.kts ]; then
-            sed -i 's/compileSdk = flutter.compileSdkVersion/compileSdk = 36/' android/app/build.gradle.kts
-          elif [ -f android/app/build.gradle ]; then
-            sed -i 's/compileSdk = [0-9]*/compileSdk = 36/' android/app/build.gradle
-            sed -i 's/compileSdkVersion [0-9]*/compileSdkVersion 36/' android/app/build.gradle
-          else
-            echo "ERRORE: file Gradle Android non trovato"
-            exit 1
-          fi
+          echo "Contenuto build.gradle.kts:"
+          cat android/app/build.gradle.kts
+
+          python3 - <<'PY'
+          from pathlib import Path
+
+          file = Path("android/app/build.gradle.kts")
+          text = file.read_text()
+
+          text = text.replace(
+              "compileSdk = flutter.compileSdkVersion",
+              "compileSdk = 36"
+          )
+
+          file.write_text(text)
+          PY
+
+          echo "Verifica compileSdk:"
+          grep -n "compileSdk" android/app/build.gradle.kts
 
       - name: Scarica librerie
         run: flutter pub get
