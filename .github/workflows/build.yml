@@ -26,28 +26,6 @@ jobs:
       - name: Crea struttura Android
         run: flutter create --platforms android .
 
-      - name: Imposta Android SDK 36
-        run: |
-          echo "Contenuto build.gradle.kts:"
-          cat android/app/build.gradle.kts
-
-          python3 - <<'PY'
-          from pathlib import Path
-
-          file = Path("android/app/build.gradle.kts")
-          text = file.read_text()
-
-          text = text.replace(
-              "compileSdk = flutter.compileSdkVersion",
-              "compileSdk = 36"
-          )
-
-          file.write_text(text)
-          PY
-
-          echo "Verifica compileSdk:"
-          grep -n "compileSdk" android/app/build.gradle.kts
-
       - name: Scarica librerie
         run: flutter pub get
 
