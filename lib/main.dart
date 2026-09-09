@@ -404,7 +404,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
         const SizedBox(height: 8),
         LinearProgressIndicator(value: percentuale > 1 ? 1 : percentuale, minHeight: 10, color: inAllerta ? Colors.redAccent : baseColor),
-      class AziendaScreen extends StatefulWidget {
+      ],
+    );
+  }
+}
+
+class AziendaScreen extends StatefulWidget {
   const AziendaScreen({Key? key}) : super(key: key);
 
   @override
@@ -607,11 +612,6 @@ class _AziendaScreenState extends State<AziendaScreen> {
   }
   String _csv(String v) => '"${v.replaceAll('"', '""')}"';
   void _snack(String t) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(t)));
-}
-
- ),
-    );
-  }
 }
 
 class StoricoViaggiScreen extends StatefulWidget {
