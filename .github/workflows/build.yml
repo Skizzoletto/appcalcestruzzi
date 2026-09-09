@@ -26,6 +26,11 @@ jobs:
       - name: Crea struttura Android
         run: flutter create --platforms android .
 
+      - name: Imposta compileSdk Android 36
+        run: |
+          sed -i 's/compileSdk = [0-9]*/compileSdk = 36/' android/app/build.gradle
+          sed -i 's/compileSdkVersion [0-9]*/compileSdkVersion 36/' android/app/build.gradle
+
       - name: Scarica librerie
         run: flutter pub get
 
