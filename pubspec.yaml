@@ -1,7 +1,9 @@
 name: calcestruzzi_app
 description: App gestione Ddt
 publish_to: 'none'
+
 version: 1.0.0+1
+
 repository: https://github.com/Skizzoletto/appcalcestruzzi
 
 environment:
@@ -10,6 +12,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+
   cupertino_icons: ^1.0.2
   excel: ^4.0.3
   path_provider: ^2.1.0
